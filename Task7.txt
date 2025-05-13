@@ -1,0 +1,178 @@
+Task7:
+
+#Create database as IMDB SQL Query : 
+
+CREATE DATABASE IMDB;
+
+
+
+-- USERS: Who write reviews
+CREATE TABLE Users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- MOVIES
+CREATE TABLE Movies (
+    movie_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    release_date DATE,
+    description TEXT
+);
+
+-- MEDIA: One movie can have multiple media
+CREATE TABLE Media (
+    media_id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    media_type ENUM('image', 'video') NOT NULL,
+    media_url VARCHAR(255) NOT NULL,
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id)
+);
+
+-- GENRES
+CREATE TABLE Genres (
+    genre_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- MOVIE_GENRES: Many-to-many relationship
+CREATE TABLE Movie_Genres (
+    movie_id INT,
+    genre_id INT,
+    PRIMARY KEY (movie_id, genre_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id),
+    FOREIGN KEY (genre_id) REFERENCES Genres(genre_id)
+);
+
+-- REVIEWS: Review by user for a movie
+CREATE TABLE Reviews (
+    review_id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    user_id INT NOT NULL,
+    rating INT CHECK(rating BETWEEN 1 AND 10),
+    review_text TEXT,
+    review_date DATE,
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+-- ARTISTS
+CREATE TABLE Artists (
+    artist_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    dob DATE
+);
+
+-- SKILLS
+CREATE TABLE Skills (
+    skill_id INT AUTO_INCREMENT PRIMARY KEY,
+    skill_name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- ARTIST_SKILLS: many-to-many
+CREATE TABLE Artist_Skills (
+    artist_id INT,
+    skill_id INT,
+    PRIMARY KEY (artist_id, skill_id),
+    FOREIGN KEY (artist_id) REFERENCES Artists(artist_id),
+    FOREIGN KEY (skill_id) REFERENCES Skills(skill_id)
+);
+
+-- ROLES (in movies)
+CREATE TABLE Roles (
+    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- MOVIE_ARTIST_ROLES: artist can have multiple roles in a movie
+CREATE TABLE Movie_Artist_Roles (
+    movie_id INT,
+    artist_id INT,
+    role_id INT,
+    PRIMARY KEY (movie_id, artist_id, role_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id),
+    FOREIGN KEY (artist_id) REFERENCES Artists(artist_id),
+    FOREIGN KEY (role_id) REFERENCES Roles(role_id)
+);
+
+
+-- Insert Users
+INSERT INTO Users (name, email) VALUES
+('Balakumar', 'bala@gmail.com'),
+('Jeevankumar', 'Jkumar@gmail.com');
+
+-- Insert Movies
+INSERT INTO Movies (title, release_date, description) VALUES
+('The Journey Begins', '2023-06-01', 'An epic saga of discovery.'),
+('Comedy Nights', '2022-10-10', 'Laughs and more laughs.');
+
+-- Insert Media
+INSERT INTO Media (movie_id, media_type, media_url) VALUES
+(1, 'image', 'https://img.com/poster1.jpg'),
+(1, 'video', 'https://vid.com/trailer1.mp4'),
+(2, 'image', 'https://img.com/poster2.jpg');
+
+-- Insert Genres
+INSERT INTO Genres (name) VALUES
+('Adventure'), ('Comedy'), ('Drama');
+
+-- Map Movies to Genres
+INSERT INTO Movie_Genres (movie_id, genre_id) VALUES
+(1, 1), (1, 3),  -- The Journey Begins is Adventure + Drama
+(2, 2);         -- Comedy Nights is Comedy
+
+-- Insert Reviews
+INSERT INTO Reviews (movie_id, user_id, rating, review_text, review_date) VALUES
+(1, 1, 9, 'Loved the story and visuals!', '2023-06-05'),
+(2, 2, 7, 'Very funny and entertaining.', '2022-10-12');
+
+-- Insert Artists
+INSERT INTO Artists (name, dob) VALUES
+('Kamal Hero', '1990-04-20'),
+('SJ suirya Director', '2000-09-15');
+
+-- Insert Skills
+INSERT INTO Skills (skill_name) VALUES
+('Acting'), ('Directing'), ('Writing');
+
+-- Map Artists to Skills
+INSERT INTO Artist_Skills (artist_id, skill_id) VALUES
+(1, 1), -- Kamal Hero: Acting
+(2, 2), -- SJ suirya Director: Directing
+(2, 3); -- SJ Suirya Director: Writing
+
+-- Insert Roles
+INSERT INTO Roles (role_name) VALUES
+('Lead Actor'), ('Director'), ('Screenwriter');
+
+-- Map Artist to Roles in Movies
+INSERT INTO Movie_Artist_Roles (movie_id, artist_id, role_id) VALUES
+(1, 1, 1), -- Kamal Hero as Lead Actor in "The Journey Begins"
+(1, 2, 2), -- SJ suriya Director as Director
+(1, 2, 3); -- SJ suirya Director as Screenwriter
+
+
+To view the tables
+
+SELECT * FROM Users;
+SELECT * FROM Movies;
+SELECT * FROM Media WHERE movie_id = 1;
+SELECT * FROM Genres;
+SELECT * FROM Movie_Genres;
+SELECT * FROM Reviews;
+SELECT * FROM Artist_Skills;
+
+
+SELECT a.name AS artist, s.skill_name
+FROM Artist_Skills ask
+JOIN Artists a ON ask.artist_id = a.artist_id
+JOIN Skills s ON ask.skill_id = s.skill_id;
+
+#View all artist roles in each movie
+
+SELECT m.title AS movie, a.name AS artist, r.role_name
+FROM Movie_Artist_Roles mar
+JOIN Movies m ON mar.movie_id = m.movie_id
+JOIN Artists a ON mar.artist_id = a.artist_id
+JOIN Roles r ON mar.role_id = r.role_id;
